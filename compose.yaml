@@ -6,6 +6,14 @@ services:
       - "127.0.0.1:4566:4566"
       - "127.0.0.1:4510-4559:4510-4559"
     environment:
-      - DOCKER_HOST=unix:///var/run/docker.sock
+      DOCKER_HOST: unix:///var/run/docker.sock
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
+
+  aws-cli:
+    container_name: aws-cli
+    image: amazon/aws-cli
+    environment:
+      AWS_ACCESS_KEY_ID: dummy
+      AWS_SECRET_ACCESS_KEY: dummy
+      AWS_DEFAULT_REGION: us-east-1
