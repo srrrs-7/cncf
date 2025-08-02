@@ -1,4 +1,7 @@
-.PHONY: localstack all sqs lambda s3 apigateway dynamodb ses sns kinesis cloudwatch eventbridge
+##############
+# localstack #
+##############
+.PHONY: localstack all sqs lambda lambda-invoke lambda-delete s3 apigateway dynamodb ses sns kinesis cloudwatch eventbridge
 
 LOCALSTACK_URL := http://localstack:4566
 
@@ -11,15 +14,26 @@ sqs:
 	docker compose run --rm aws-cli --endpoint-url=$(LOCALSTACK_URL) sqs create-queue --queue-name test-queue
 
 lambda:
-	@echo 'def handler(event, context): return {"statusCode": 200, "body": "Hello from Lambda!"}' > /tmp/lambda_function.py
-	@cd /tmp && zip lambda_function.zip lambda_function.py
-	docker compose run --rm -v /tmp:/tmp aws-cli --endpoint-url=$(LOCALSTACK_URL) lambda create-function \
+	docker compose exec localstack zip \
+		 /src/lambda/dist/lambda_func.zip \
+		/src/lambda/dist/lambda_func.js /src/lambda/package.json
+	docker compose run --rm aws-cli --endpoint-url=$(LOCALSTACK_URL) lambda create-function \
 		--function-name test-function \
-		--runtime python3.9 \
+		--runtime nodejs22.x \
 		--role arn:aws:iam::123456789012:role/lambda-role \
-		--handler lambda_function.handler \
-		--zip-file fileb:///tmp/lambda_function.zip
-	@rm -f /tmp/lambda_function.py /tmp/lambda_function.zip
+		--handler lambda_func.handler \
+		--zip-file fileb:///src/lambda/dist/lambda_func.zip
+
+lambda-invoke:
+	docker compose run --rm aws-cli --endpoint-url=$(LOCALSTACK_URL) lambda invoke \
+		--function-name test-function \
+		--cli-binary-format raw-in-base64-out \
+  		--payload '{ "name": "srrrs" }' \
+  		/src/lambda/output/output.json
+	docker compose exec localstack cat /src/lambda/output/output.json
+
+lambda-delete:
+	docker compose run --rm aws-cli --endpoint-url=$(LOCALSTACK_URL) lambda delete-function --function-name test-function
 
 s3:
 	docker compose run --rm aws-cli --endpoint-url=$(LOCALSTACK_URL) s3 mb s3://test-bucket
@@ -48,4 +62,15 @@ cloudwatch:
 
 eventbridge:
 	docker compose run --rm aws-cli --endpoint-url=$(LOCALSTACK_URL) events create-event-bus --name test-event-bus
+
+############
+# oven bun #
+############
+.PHONY: bun
+
+bun:
+	docker compose run --rm oven-bun bash
+
+lambda-build:
+	docker compose run --rm oven-bun bun build /src/lambda/func/lambda_func.ts --outdir=/src/lambda/dist --format esm
 

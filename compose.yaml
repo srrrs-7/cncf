@@ -3,12 +3,13 @@ services:
     container_name: localstack
     image: localstack/localstack
     ports:
-      - "127.0.0.1:4566:4566"
-      - "127.0.0.1:4510-4559:4510-4559"
+      - 127.0.0.1:4566:4566
+      - 127.0.0.1:4510-4559:4510-4559
     environment:
       DOCKER_HOST: unix:///var/run/docker.sock
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./src:/src
 
   aws-cli:
     container_name: aws-cli
@@ -17,3 +18,12 @@ services:
       AWS_ACCESS_KEY_ID: dummy
       AWS_SECRET_ACCESS_KEY: dummy
       AWS_DEFAULT_REGION: us-east-1
+    volumes:
+      - ./src:/src
+
+  oven-bun:
+    container_name: oven-bun
+    image: oven/bun
+    working_dir: /src
+    volumes:
+      - ./src:/src

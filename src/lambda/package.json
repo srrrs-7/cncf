@@ -1,0 +1,15 @@
+{
+  "name": "lambda",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.152",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "aws-lambda": "^1.0.7"
+  }
+}
